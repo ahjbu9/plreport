@@ -11,8 +11,10 @@ import {
   Eye, 
   Type, 
   FileOutput,
-  Plus
+  Plus,
+  RotateCcw
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function SettingsPage() {
   const { 
@@ -20,7 +22,8 @@ export function SettingsPage() {
     settings, 
     updateSettings, 
     updateFooter,
-    addSection 
+    addSection,
+    resetToDefault
   } = useReport();
 
   return (
@@ -213,7 +216,7 @@ export function SettingsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between py-3">
+              <div className="flex items-center justify-between py-3 border-b border-border">
                 <div>
                   <Label className="text-foreground font-medium">تأثيرات التحويم</Label>
                   <p className="text-sm text-muted-foreground">تغيير لون الصف عند المرور عليه</p>
@@ -224,6 +227,24 @@ export function SettingsPage() {
                 />
               </div>
             </div>
+          </Card>
+
+          <Card className="p-6 shadow-soft mt-6 border-destructive/30">
+            <h3 className="text-lg font-semibold text-destructive mb-4">إعادة التعيين</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              سيتم إعادة جميع البيانات والإعدادات إلى الوضع الافتراضي. هذا الإجراء لا يمكن التراجع عنه.
+            </p>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                resetToDefault();
+                toast.success('تم إعادة التعيين إلى الوضع الافتراضي');
+              }}
+              className="gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              إعادة التعيين للوضع الافتراضي
+            </Button>
           </Card>
         </TabsContent>
       </Tabs>
