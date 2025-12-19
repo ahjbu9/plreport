@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { ReportData, ReportSettings, ReportSection, ReportTable, KPICard, PlatformCard, NoteSection, TableRow, TableColumn } from '@/types/report';
 import { initialReportData, initialSettings } from '@/data/initialReportData';
 
@@ -27,15 +27,35 @@ interface ReportContextType {
   addTable: (sectionId: string, title: string) => void;
   addPlatformCard: (sectionId: string) => void;
   addNoteGroup: (sectionId: string) => void;
+  saveToLocalStorage: () => void;
+  loadReport: (data: ReportData) => void;
 }
 
 const ReportContext = createContext<ReportContextType | undefined>(undefined);
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+const STORAGE_KEY = 'monthly-report-data';
+const SETTINGS_KEY = 'monthly-report-settings';
+
 export function ReportProvider({ children }: { children: ReactNode }) {
-  const [reportData, setReportData] = useState<ReportData>(initialReportData);
-  const [settings, setSettings] = useState<ReportSettings>(initialSettings);
+  const [reportData, setReportData] = useState<ReportData>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : initialReportData;
+  });
+  const [settings, setSettings] = useState<ReportSettings>(() => {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+    return saved ? JSON.parse(saved) : initialSettings;
+  });
+
+  const saveToLocalStorage = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(reportData));
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  };
+
+  const loadReport = (data: ReportData) => {
+    setReportData(data);
+  };
 
   const updateHeader = (title: string, subtitle: string) => {
     setReportData(prev => ({
@@ -436,7 +456,9 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       removeSection,
       addTable,
       addPlatformCard,
-      addNoteGroup
+      addNoteGroup,
+      saveToLocalStorage,
+      loadReport
     }}>
       {children}
     </ReportContext.Provider>
