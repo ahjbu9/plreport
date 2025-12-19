@@ -29,6 +29,7 @@ interface ReportContextType {
   addNoteGroup: (sectionId: string) => void;
   saveToLocalStorage: () => void;
   loadReport: (data: ReportData) => void;
+  resetToDefault: () => void;
 }
 
 const ReportContext = createContext<ReportContextType | undefined>(undefined);
@@ -55,6 +56,13 @@ export function ReportProvider({ children }: { children: ReactNode }) {
 
   const loadReport = (data: ReportData) => {
     setReportData(data);
+  };
+
+  const resetToDefault = () => {
+    setReportData(initialReportData);
+    setSettings(initialSettings);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SETTINGS_KEY);
   };
 
   const updateHeader = (title: string, subtitle: string) => {
@@ -458,7 +466,8 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       addPlatformCard,
       addNoteGroup,
       saveToLocalStorage,
-      loadReport
+      loadReport,
+      resetToDefault
     }}>
       {children}
     </ReportContext.Provider>
