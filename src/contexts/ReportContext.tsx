@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { ReportData, ReportSettings, ReportSection, ReportTable, KPICard, PlatformCard, NoteSection, TableRow, TableColumn } from '@/types/report';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { ReportData, ReportSettings, ReportSection, ReportTable, KPICard, PlatformCard, NoteSection, TableColumn } from '@/types/report';
 import { initialReportData, initialSettings } from '@/data/initialReportData';
 
 interface ReportContextType {
@@ -10,6 +10,8 @@ interface ReportContextType {
   updateSectionTitle: (sectionId: string, title: string) => void;
   toggleSectionVisibility: (sectionId: string) => void;
   updateKPI: (sectionId: string, kpiId: string, updates: Partial<KPICard>) => void;
+  addKPI: (sectionId: string) => void;
+  removeKPI: (sectionId: string, kpiId: string) => void;
   updateTable: (sectionId: string, tableId: string, updates: Partial<ReportTable>) => void;
   updateTableCell: (sectionId: string, tableId: string, rowId: string, columnHeader: string, value: string) => void;
   addTableRow: (sectionId: string, tableId: string) => void;
@@ -17,6 +19,7 @@ interface ReportContextType {
   addTableColumn: (sectionId: string, tableId: string, header: string) => void;
   toggleColumnVisibility: (sectionId: string, tableId: string, columnId: string) => void;
   updatePlatformCard: (sectionId: string, cardId: string, updates: Partial<PlatformCard>) => void;
+  removePlatformCard: (sectionId: string, cardId: string) => void;
   updateNoteSection: (sectionId: string, noteId: string, updates: Partial<NoteSection>) => void;
   addNoteItem: (sectionId: string, noteId: string, item: string) => void;
   removeNoteItem: (sectionId: string, noteId: string, index: number) => void;
@@ -29,7 +32,10 @@ interface ReportContextType {
   addNoteGroup: (sectionId: string) => void;
   saveToLocalStorage: () => void;
   loadReport: (data: ReportData) => void;
+  loadSettings: (settings: ReportSettings) => void;
   resetToDefault: () => void;
+  exportToJSON: () => string;
+  importFromJSON: (json: string) => boolean;
 }
 
 const ReportContext = createContext<ReportContextType | undefined>(undefined);
@@ -58,11 +64,34 @@ export function ReportProvider({ children }: { children: ReactNode }) {
     setReportData(data);
   };
 
+  const loadSettings = (newSettings: ReportSettings) => {
+    setSettings(newSettings);
+  };
+
   const resetToDefault = () => {
     setReportData(initialReportData);
     setSettings(initialSettings);
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(SETTINGS_KEY);
+  };
+
+  const exportToJSON = () => {
+    return JSON.stringify({ reportData, settings }, null, 2);
+  };
+
+  const importFromJSON = (json: string): boolean => {
+    try {
+      const parsed = JSON.parse(json);
+      if (parsed.reportData) {
+        setReportData(parsed.reportData);
+      }
+      if (parsed.settings) {
+        setSettings(parsed.settings);
+      }
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const updateHeader = (title: string, subtitle: string) => {
@@ -108,6 +137,43 @@ export function ReportProvider({ children }: { children: ReactNode }) {
               k.id === kpiId ? { ...k, ...updates } : k
             )
           };
+        }
+        return s;
+      })
+    }));
+  };
+
+  const addKPI = (sectionId: string) => {
+    const newKPI: KPICard = {
+      id: generateId(),
+      icon: 'trending-up',
+      value: '0',
+      label: 'مؤشر جديد',
+      visible: true
+    };
+    setReportData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => {
+        if (s.id === sectionId && s.type === 'kpi') {
+          const currentKPIs = s.data as KPICard[];
+          if (currentKPIs.length < 8) {
+            return { ...s, data: [...currentKPIs, newKPI] };
+          }
+        }
+        return s;
+      })
+    }));
+  };
+
+  const removeKPI = (sectionId: string, kpiId: string) => {
+    setReportData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => {
+        if (s.id === sectionId && s.type === 'kpi') {
+          const currentKPIs = s.data as KPICard[];
+          if (currentKPIs.length > 3) {
+            return { ...s, data: currentKPIs.filter(k => k.id !== kpiId) };
+          }
         }
         return s;
       })
@@ -269,6 +335,21 @@ export function ReportProvider({ children }: { children: ReactNode }) {
             data: (s.data as PlatformCard[]).map(p => 
               p.id === cardId ? { ...p, ...updates } : p
             )
+          };
+        }
+        return s;
+      })
+    }));
+  };
+
+  const removePlatformCard = (sectionId: string, cardId: string) => {
+    setReportData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => {
+        if (s.id === sectionId && s.type === 'platforms') {
+          return {
+            ...s,
+            data: (s.data as PlatformCard[]).filter(p => p.id !== cardId)
           };
         }
         return s;
@@ -448,6 +529,8 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       updateSectionTitle,
       toggleSectionVisibility,
       updateKPI,
+      addKPI,
+      removeKPI,
       updateTable,
       updateTableCell,
       addTableRow,
@@ -455,6 +538,7 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       addTableColumn,
       toggleColumnVisibility,
       updatePlatformCard,
+      removePlatformCard,
       updateNoteSection,
       addNoteItem,
       removeNoteItem,
@@ -467,7 +551,10 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       addNoteGroup,
       saveToLocalStorage,
       loadReport,
-      resetToDefault
+      loadSettings,
+      resetToDefault,
+      exportToJSON,
+      importFromJSON
     }}>
       {children}
     </ReportContext.Provider>
