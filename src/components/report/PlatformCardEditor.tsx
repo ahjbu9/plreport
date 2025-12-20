@@ -4,15 +4,20 @@ import { EditableText } from './EditableText';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { getPlatformIcon, getPlatformColor } from './PlatformIcons';
 import { MapPin, Plus, Trash2 } from 'lucide-react';
 
 interface PlatformCardEditorProps {
   card: PlatformCard;
   onUpdate: (updates: Partial<PlatformCard>) => void;
+  onRemove?: () => void;
   isEditing?: boolean;
 }
 
-export function PlatformCardEditor({ card, onUpdate, isEditing = true }: PlatformCardEditorProps) {
+export function PlatformCardEditor({ card, onUpdate, onRemove, isEditing = true }: PlatformCardEditorProps) {
+  const PlatformIcon = getPlatformIcon(card.title);
+  const platformColor = getPlatformColor(card.title);
+  
   const updateItem = (index: number, field: 'label' | 'value', newValue: string) => {
     const newItems = [...card.items];
     newItems[index] = { ...newItems[index], [field]: newValue };
@@ -30,17 +35,32 @@ export function PlatformCardEditor({ card, onUpdate, isEditing = true }: Platfor
   return (
     <Card className={`relative p-5 shadow-soft border-border/50 transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 ${!card.visible ? 'opacity-50' : ''}`}>
       {isEditing && (
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex items-center gap-1">
           <Switch
             checked={card.visible}
             onCheckedChange={(checked) => onUpdate({ visible: checked })}
             className="scale-75"
           />
+          {onRemove && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onRemove}
+              className="h-6 w-6 text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          )}
         </div>
       )}
       
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-        <MapPin className="w-5 h-5 text-primary" />
+        <div 
+          className="w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: `${platformColor}20` }}
+        >
+          <PlatformIcon className="w-4 h-4" style={{ color: platformColor }} />
+        </div>
         {isEditing ? (
           <EditableText
             value={card.title}

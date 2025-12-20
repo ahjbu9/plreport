@@ -1,5 +1,5 @@
 import { useReport } from '@/contexts/ReportContext';
-import { KPICardEditor } from './KPICardEditor';
+import { KPICardEditor, AddKPIButton } from './KPICardEditor';
 import { TableEditor } from './TableEditor';
 import { PlatformCardEditor } from './PlatformCardEditor';
 import { NoteSectionEditor } from './NoteSectionEditor';
@@ -7,6 +7,7 @@ import { EditableText } from './EditableText';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
+import { useFollowerCalculation } from '@/hooks/useFollowerCalculation';
 import { 
   KPICard, 
   ReportTable, 
@@ -55,13 +56,25 @@ export function ReportEditor() {
     addTable,
     addPlatformCard,
     addNoteGroup,
-    removeSection
+    removeSection,
+    addKPI,
+    removeKPI,
+    removePlatformCard
   } = useReport();
 
+  const followerData = useFollowerCalculation(reportData);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const toggleCollapse = (sectionId: string) => {
     setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
+
+  // Get KPI with auto-calculated total followers
+  const getKPIWithAutoValue = (kpi: KPICard) => {
+    if (kpi.label.includes('إجمالي المتابعين') && followerData) {
+      return { ...kpi, value: followerData.formattedTotal };
+    }
+    return kpi;
   };
 
   return (
@@ -133,14 +146,29 @@ export function ReportEditor() {
                 {section.type === 'kpi' && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {(section.data as KPICard[]).map((kpi) => (
-                        <KPICardEditor
-                          key={kpi.id}
-                          kpi={kpi}
-                          onUpdate={(updates) => updateKPI(section.id, kpi.id, updates)}
+                      {(section.data as KPICard[]).map((kpi) => {
+                        const kpiWithAutoValue = getKPIWithAutoValue(kpi);
+                        const isAutoCalculated = kpi.label.includes('إجمالي المتابعين') && !!followerData;
+                        return (
+                          <KPICardEditor
+                            key={kpi.id}
+                            kpi={kpiWithAutoValue}
+                            onUpdate={(updates) => updateKPI(section.id, kpi.id, updates)}
+                            onRemove={(section.data as KPICard[]).length > 3 ? () => removeKPI(section.id, kpi.id) : undefined}
+                            isAutoCalculated={isAutoCalculated}
+                          />
+                        );
+                      })}
+                      {(section.data as KPICard[]).length < 8 && (
+                        <AddKPIButton 
+                          onAdd={() => addKPI(section.id)}
+                          disabled={(section.data as KPICard[]).length >= 8}
                         />
-                      ))}
+                      )}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      * يمكنك إضافة من 3 إلى 8 مؤشرات. إذا كان المؤشر يحتوي على "إجمالي المتابعين" في عنوانه، سيتم حسابه تلقائياً من جدول المنصات.
+                    </p>
                   </>
                 )}
 
@@ -178,6 +206,7 @@ export function ReportEditor() {
                           key={card.id}
                           card={card}
                           onUpdate={(updates) => updatePlatformCard(section.id, card.id, updates)}
+                          onRemove={() => removePlatformCard(section.id, card.id)}
                         />
                       ))}
                     </div>
