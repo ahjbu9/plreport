@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ReportData, ReportSettings, ReportSection, ReportTable, KPICard, PlatformCard, NoteSection, TableColumn } from '@/types/report';
+import { ReportData, ReportSettings, ReportSection, ReportTable, KPICard, PlatformCard, NoteSection, TableColumn, ContentCard } from '@/types/report';
 import { initialReportData, initialSettings } from '@/data/initialReportData';
 
 interface ReportContextType {
@@ -30,6 +30,10 @@ interface ReportContextType {
   addTable: (sectionId: string, title: string) => void;
   addPlatformCard: (sectionId: string) => void;
   addNoteGroup: (sectionId: string) => void;
+  // Content section functions
+  updateContentCard: (sectionId: string, cardId: string, updates: Partial<ContentCard>) => void;
+  addContentCard: (sectionId: string) => void;
+  removeContentCard: (sectionId: string, cardId: string) => void;
   saveToLocalStorage: () => void;
   loadReport: (data: ReportData) => void;
   loadSettings: (settings: ReportSettings) => void;
@@ -52,7 +56,17 @@ export function ReportProvider({ children }: { children: ReactNode }) {
   });
   const [settings, setSettings] = useState<ReportSettings>(() => {
     const saved = localStorage.getItem(SETTINGS_KEY);
-    return saved ? JSON.parse(saved) : initialSettings;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Ensure new fields exist
+      return {
+        ...initialSettings,
+        ...parsed,
+        email: { ...initialSettings.email, ...parsed.email },
+        theme: { ...initialSettings.theme, ...parsed.theme }
+      };
+    }
+    return initialSettings;
   });
 
   const saveToLocalStorage = () => {
@@ -86,7 +100,7 @@ export function ReportProvider({ children }: { children: ReactNode }) {
         setReportData(parsed.reportData);
       }
       if (parsed.settings) {
-        setSettings(parsed.settings);
+        setSettings({ ...initialSettings, ...parsed.settings });
       }
       return true;
     } catch {
@@ -433,6 +447,61 @@ export function ReportProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  // Content Card Functions
+  const updateContentCard = (sectionId: string, cardId: string, updates: Partial<ContentCard>) => {
+    setReportData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => {
+        if (s.id === sectionId && s.type === 'content') {
+          return {
+            ...s,
+            data: (s.data as ContentCard[]).map(c => 
+              c.id === cardId ? { ...c, ...updates } : c
+            )
+          };
+        }
+        return s;
+      })
+    }));
+  };
+
+  const addContentCard = (sectionId: string) => {
+    const newCard: ContentCard = {
+      id: generateId(),
+      thumbnail: '',
+      contentType: 'design',
+      description: 'محتوى جديد',
+      visible: true
+    };
+    setReportData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => {
+        if (s.id === sectionId && s.type === 'content') {
+          const currentCards = s.data as ContentCard[];
+          if (currentCards.length < 8) {
+            return { ...s, data: [...currentCards, newCard] };
+          }
+        }
+        return s;
+      })
+    }));
+  };
+
+  const removeContentCard = (sectionId: string, cardId: string) => {
+    setReportData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => {
+        if (s.id === sectionId && s.type === 'content') {
+          return {
+            ...s,
+            data: (s.data as ContentCard[]).filter(c => c.id !== cardId)
+          };
+        }
+        return s;
+      })
+    }));
+  };
+
   const updateSettings = (updates: Partial<ReportSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));
   };
@@ -441,10 +510,10 @@ export function ReportProvider({ children }: { children: ReactNode }) {
     const newSection: ReportSection = {
       id: generateId(),
       type,
-      title: 'قسم جديد',
-      icon: type === 'kpi' ? 'bar-chart' : type === 'table' ? 'table' : type === 'platforms' ? 'layout-grid' : 'clipboard-list',
+      title: type === 'content' ? 'أفضل محتوى' : 'قسم جديد',
+      icon: type === 'kpi' ? 'bar-chart' : type === 'table' ? 'table' : type === 'platforms' ? 'layout-grid' : type === 'content' ? 'sparkles' : 'clipboard-list',
       visible: true,
-      data: type === 'kpi' ? [] : type === 'table' ? [] : type === 'platforms' ? [] : []
+      data: []
     };
     setReportData(prev => ({
       ...prev,
@@ -543,6 +612,9 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       addNoteItem,
       removeNoteItem,
       updateNoteItem,
+      updateContentCard,
+      addContentCard,
+      removeContentCard,
       updateSettings,
       addSection,
       removeSection,

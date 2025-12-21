@@ -40,13 +40,32 @@ export interface NoteSection {
   visible: boolean;
 }
 
+// Content Types for Best Content Section
+export type ContentType = 'album' | 'infographic' | 'design' | 'video' | 'ai' | 'voiceover';
+
+export interface ContentCard {
+  id: string;
+  thumbnail: string; // base64 or URL
+  contentType: ContentType;
+  description: string;
+  visible: boolean;
+}
+
+export interface ContentSection {
+  id: string;
+  title: string;
+  icon: string;
+  cards: ContentCard[];
+  visible: boolean;
+}
+
 export interface ReportSection {
   id: string;
-  type: 'kpi' | 'table' | 'platforms' | 'notes';
+  type: 'kpi' | 'table' | 'platforms' | 'notes' | 'content';
   title: string;
   icon: string;
   visible: boolean;
-  data: KPICard[] | ReportTable[] | PlatformCard[] | NoteSection[];
+  data: KPICard[] | ReportTable[] | PlatformCard[] | NoteSection[] | ContentCard[];
 }
 
 export interface ReportHeader {
@@ -65,14 +84,30 @@ export interface ReportData {
   footer: ReportFooter;
 }
 
+export interface EmailSettings {
+  emails: string[];
+  organizationName: string;
+  reportMonth: string;
+}
+
+export interface ThemeSettings {
+  primaryColor: string;
+  accentColor: string;
+  cardStyle: 'modern' | 'classic' | 'minimal';
+  fontFamily: 'cairo' | 'tajawal' | 'both';
+}
+
 export interface ReportSettings {
   showHeader: boolean;
   showFooter: boolean;
   showKPIs: boolean;
   showPlatformCards: boolean;
   showNotes: boolean;
+  showContent: boolean;
   enableTableStriping: boolean;
   enableHoverEffects: boolean;
   primaryColor: string;
   accentColor: string;
+  email: EmailSettings;
+  theme: ThemeSettings;
 }

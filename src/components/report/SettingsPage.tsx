@@ -5,16 +5,21 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { EditableText } from './EditableText';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Settings2, 
   Eye, 
   Type, 
   FileOutput,
   Plus,
-  RotateCcw
+  RotateCcw,
+  Palette,
+  Mail,
+  X,
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 export function SettingsPage() {
   const { 
@@ -25,6 +30,24 @@ export function SettingsPage() {
     addSection,
     resetToDefault
   } = useReport();
+
+  const [newEmail, setNewEmail] = useState('');
+
+  const addEmail = () => {
+    if (newEmail && !settings.email.emails.includes(newEmail)) {
+      updateSettings({
+        email: { ...settings.email, emails: [...settings.email.emails, newEmail] }
+      });
+      setNewEmail('');
+      toast.success('تمت إضافة البريد الإلكتروني');
+    }
+  };
+
+  const removeEmail = (email: string) => {
+    updateSettings({
+      email: { ...settings.email, emails: settings.email.emails.filter(e => e !== email) }
+    });
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -39,14 +62,18 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="display" dir="rtl" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-muted">
+        <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted">
           <TabsTrigger value="display" className="gap-2 py-3">
             <Eye className="w-4 h-4" />
             العرض
           </TabsTrigger>
-          <TabsTrigger value="content" className="gap-2 py-3">
-            <Type className="w-4 h-4" />
-            المحتوى
+          <TabsTrigger value="theme" className="gap-2 py-3">
+            <Palette className="w-4 h-4" />
+            المظهر
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-2 py-3">
+            <Mail className="w-4 h-4" />
+            البريد
           </TabsTrigger>
           <TabsTrigger value="sections" className="gap-2 py-3">
             <FileOutput className="w-4 h-4" />
@@ -98,6 +125,17 @@ export function SettingsPage() {
 
               <div className="flex items-center justify-between py-3 border-b border-border">
                 <div>
+                  <Label className="text-foreground font-medium">إظهار قسم أفضل محتوى</Label>
+                  <p className="text-sm text-muted-foreground">بطاقات المحتوى المميز</p>
+                </div>
+                <Switch
+                  checked={settings.showContent}
+                  onCheckedChange={(checked) => updateSettings({ showContent: checked })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <div>
                   <Label className="text-foreground font-medium">إظهار بطاقات المنصات</Label>
                   <p className="text-sm text-muted-foreground">بطاقات المنصات الفرعية</p>
                 </div>
@@ -121,28 +159,103 @@ export function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="content">
+        <TabsContent value="theme">
           <Card className="p-6 shadow-soft">
-            <h3 className="text-lg font-semibold text-foreground mb-6">تذييل التقرير</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-6">تخصيص المظهر</h3>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <Label className="text-foreground font-medium mb-2 block">السطر الأول</Label>
+                <Label className="text-foreground font-medium mb-2 block">نمط البطاقات</Label>
+                <Select 
+                  value={settings.theme.cardStyle} 
+                  onValueChange={(value: 'modern' | 'classic' | 'minimal') => 
+                    updateSettings({ theme: { ...settings.theme, cardStyle: value } })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="modern">عصري</SelectItem>
+                    <SelectItem value="classic">كلاسيكي</SelectItem>
+                    <SelectItem value="minimal">بسيط</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-foreground font-medium mb-2 block">الخط</Label>
+                <Select 
+                  value={settings.theme.fontFamily} 
+                  onValueChange={(value: 'cairo' | 'tajawal' | 'both') => 
+                    updateSettings({ theme: { ...settings.theme, fontFamily: value } })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cairo">Cairo</SelectItem>
+                    <SelectItem value="tajawal">Tajawal</SelectItem>
+                    <SelectItem value="both">مزيج</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="email">
+          <Card className="p-6 shadow-soft">
+            <h3 className="text-lg font-semibold text-foreground mb-6">إعدادات البريد الإلكتروني</h3>
+            
+            <div className="space-y-6">
+              <div>
+                <Label className="text-foreground font-medium mb-2 block">اسم المؤسسة</Label>
                 <Input
-                  value={reportData.footer.line1}
-                  onChange={(e) => updateFooter(e.target.value, reportData.footer.line2)}
+                  value={settings.email.organizationName}
+                  onChange={(e) => updateSettings({ email: { ...settings.email, organizationName: e.target.value } })}
                   dir="rtl"
                   className="bg-background"
                 />
               </div>
+
               <div>
-                <Label className="text-foreground font-medium mb-2 block">السطر الثاني</Label>
+                <Label className="text-foreground font-medium mb-2 block">شهر التقرير</Label>
                 <Input
-                  value={reportData.footer.line2}
-                  onChange={(e) => updateFooter(reportData.footer.line1, e.target.value)}
+                  value={settings.email.reportMonth}
+                  onChange={(e) => updateSettings({ email: { ...settings.email, reportMonth: e.target.value } })}
                   dir="rtl"
                   className="bg-background"
+                  placeholder="مثال: نوفمبر 2025"
                 />
+              </div>
+
+              <div>
+                <Label className="text-foreground font-medium mb-2 block">قائمة البريد الإلكتروني</Label>
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    type="email"
+                    placeholder="أدخل البريد الإلكتروني"
+                    dir="ltr"
+                    className="bg-background"
+                  />
+                  <Button onClick={addEmail} variant="outline">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {settings.email.emails.map((email) => (
+                    <span key={email} className="flex items-center gap-1 bg-muted px-3 py-1 rounded-full text-sm">
+                      {email}
+                      <button onClick={() => removeEmail(email)} className="text-destructive hover:text-destructive/80">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </Card>
@@ -153,44 +266,35 @@ export function SettingsPage() {
             <h3 className="text-lg font-semibold text-foreground mb-6">إضافة قسم جديد</h3>
             
             <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                onClick={() => addSection('kpi')}
-                className="h-24 flex-col gap-2"
-              >
+              <Button variant="outline" onClick={() => addSection('kpi')} className="h-24 flex-col gap-2">
                 <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
                   <Plus className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <span>قسم مؤشرات KPI</span>
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => addSection('table')}
-                className="h-24 flex-col gap-2"
-              >
+              <Button variant="outline" onClick={() => addSection('content')} className="h-24 flex-col gap-2">
+                <div className="w-10 h-10 rounded-lg gradient-gold flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <span>قسم أفضل محتوى</span>
+              </Button>
+
+              <Button variant="outline" onClick={() => addSection('table')} className="h-24 flex-col gap-2">
                 <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
                   <Plus className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <span>قسم جداول</span>
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => addSection('platforms')}
-                className="h-24 flex-col gap-2"
-              >
+              <Button variant="outline" onClick={() => addSection('platforms')} className="h-24 flex-col gap-2">
                 <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
                   <Plus className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <span>قسم منصات</span>
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => addSection('notes')}
-                className="h-24 flex-col gap-2"
-              >
+              <Button variant="outline" onClick={() => addSection('notes')} className="h-24 flex-col gap-2 col-span-2">
                 <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
                   <Plus className="w-5 h-5 text-primary-foreground" />
                 </div>
@@ -224,6 +328,30 @@ export function SettingsPage() {
                 <Switch
                   checked={settings.enableHoverEffects}
                   onCheckedChange={(checked) => updateSettings({ enableHoverEffects: checked })}
+                />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 shadow-soft mt-6">
+            <h3 className="text-lg font-semibold text-foreground mb-6">تذييل التقرير</h3>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-foreground font-medium mb-2 block">السطر الأول</Label>
+                <Input
+                  value={reportData.footer.line1}
+                  onChange={(e) => updateFooter(e.target.value, reportData.footer.line2)}
+                  dir="rtl"
+                  className="bg-background"
+                />
+              </div>
+              <div>
+                <Label className="text-foreground font-medium mb-2 block">السطر الثاني</Label>
+                <Input
+                  value={reportData.footer.line2}
+                  onChange={(e) => updateFooter(reportData.footer.line1, e.target.value)}
+                  dir="rtl"
+                  className="bg-background"
                 />
               </div>
             </div>

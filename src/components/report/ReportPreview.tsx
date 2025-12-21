@@ -1,5 +1,6 @@
 import { useReport } from '@/contexts/ReportContext';
-import { KPICard, ReportTable, PlatformCard, NoteSection } from '@/types/report';
+import { KPICard, ReportTable, PlatformCard, NoteSection, ContentCard } from '@/types/report';
+import { ContentTypeBadge } from './ContentCardEditor';
 import { 
   Users, 
   FileText, 
@@ -13,7 +14,9 @@ import {
   Award,
   Calendar,
   Lightbulb,
-  CheckCircle
+  CheckCircle,
+  Sparkles,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const kpiIconMap: Record<string, React.ElementType> = {
@@ -36,7 +39,8 @@ const sectionIcons: Record<string, React.ElementType> = {
   'table': ChartLine,
   'layout-grid': LayoutGrid,
   'clipboard-list': ClipboardList,
-  'bar-chart': ChartLine
+  'bar-chart': ChartLine,
+  'sparkles': Sparkles
 };
 
 export function ReportPreview() {
@@ -80,6 +84,38 @@ export function ReportPreview() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Content Cards */}
+            {section.type === 'content' && settings.showContent && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                {(section.data as ContentCard[]).filter(c => c.visible).map((card) => (
+                  <div key={card.id} className="bg-card rounded-xl overflow-hidden border border-border shadow-soft hover:shadow-elevated transition-shadow">
+                    {/* Thumbnail */}
+                    <div className="aspect-video bg-muted relative">
+                      {card.thumbnail ? (
+                        <img 
+                          src={card.thumbnail} 
+                          alt={card.description}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="w-10 h-10 text-muted-foreground/50" />
+                        </div>
+                      )}
+                      {/* Content Type Badge */}
+                      <div className="absolute top-2 right-2">
+                        <ContentTypeBadge type={card.contentType} />
+                      </div>
+                    </div>
+                    {/* Description */}
+                    <div className="p-3">
+                      <p className="text-sm text-foreground line-clamp-2">{card.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
