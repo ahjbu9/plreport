@@ -16,7 +16,9 @@ import {
   Palette,
   Mail,
   X,
-  Sparkles
+  Sparkles,
+  Save,
+  Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -32,6 +34,12 @@ export function SettingsPage() {
   } = useReport();
 
   const [newEmail, setNewEmail] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSaveSettings = () => {
+    localStorage.setItem('monthly-report-settings', JSON.stringify(settings));
+    toast.success('تم حفظ الإعدادات بنجاح');
+  };
 
   const addEmail = () => {
     if (newEmail && !settings.email.emails.includes(newEmail)) {
@@ -87,7 +95,13 @@ export function SettingsPage() {
 
         <TabsContent value="display">
           <Card className="p-6 shadow-soft">
-            <h3 className="text-lg font-semibold text-foreground mb-6">إعدادات العرض</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground">إعدادات العرض</h3>
+              <Button onClick={handleSaveSettings} className="gap-2 gradient-primary text-primary-foreground">
+                <Save className="w-4 h-4" />
+                حفظ الإعدادات
+              </Button>
+            </div>
             
             <div className="space-y-6">
               <div className="flex items-center justify-between py-3 border-b border-border">
@@ -161,7 +175,13 @@ export function SettingsPage() {
 
         <TabsContent value="theme">
           <Card className="p-6 shadow-soft">
-            <h3 className="text-lg font-semibold text-foreground mb-6">تخصيص المظهر</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground">تخصيص المظهر</h3>
+              <Button onClick={handleSaveSettings} className="gap-2 gradient-primary text-primary-foreground">
+                <Save className="w-4 h-4" />
+                حفظ الإعدادات
+              </Button>
+            </div>
             
             <div className="space-y-6">
               <div>
@@ -207,7 +227,13 @@ export function SettingsPage() {
 
         <TabsContent value="email">
           <Card className="p-6 shadow-soft">
-            <h3 className="text-lg font-semibold text-foreground mb-6">إعدادات البريد الإلكتروني</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground">إعدادات البريد الإلكتروني</h3>
+              <Button onClick={handleSaveSettings} className="gap-2 gradient-primary text-primary-foreground">
+                <Save className="w-4 h-4" />
+                حفظ الإعدادات
+              </Button>
+            </div>
             
             <div className="space-y-6">
               <div>
@@ -258,6 +284,27 @@ export function SettingsPage() {
                 </div>
               </div>
             </div>
+
+            <div className="mt-8 pt-6 border-t border-border">
+              <h4 className="text-md font-semibold text-foreground mb-4">إرسال التقرير بالبريد الإلكتروني</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                سيتم إرسال التقرير بثلاث نسخ (PDF، Word، JSON) إلى جميع العناوين المحددة أعلاه.
+              </p>
+              <Button 
+                disabled={settings.email.emails.length === 0 || isSending}
+                className="gap-2 gradient-gold text-accent-foreground w-full md:w-auto"
+                onClick={() => {
+                  if (settings.email.emails.length === 0) {
+                    toast.error('يرجى إضافة بريد إلكتروني أولاً');
+                    return;
+                  }
+                  toast.info('لإرسال التقرير بالبريد الإلكتروني، يلزم تفعيل Lovable Cloud');
+                }}
+              >
+                <Send className="w-4 h-4" />
+                {isSending ? 'جاري الإرسال...' : 'إرسال التقرير'}
+              </Button>
+            </div>
           </Card>
         </TabsContent>
 
@@ -306,7 +353,13 @@ export function SettingsPage() {
 
         <TabsContent value="advanced">
           <Card className="p-6 shadow-soft">
-            <h3 className="text-lg font-semibold text-foreground mb-6">إعدادات الجداول</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground">إعدادات الجداول</h3>
+              <Button onClick={handleSaveSettings} className="gap-2 gradient-primary text-primary-foreground">
+                <Save className="w-4 h-4" />
+                حفظ الإعدادات
+              </Button>
+            </div>
             
             <div className="space-y-6">
               <div className="flex items-center justify-between py-3 border-b border-border">

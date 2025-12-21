@@ -27,6 +27,7 @@ export const initialReportData: ReportData = {
       title: 'أفضل محتوى خلال الشهر',
       icon: 'sparkles',
       visible: true,
+      
       data: [
         { id: generateId(), thumbnail: '', contentType: 'video', description: 'فيديو قصير عن التراث الفلسطيني حقق أكثر من مليون مشاهدة', visible: true },
         { id: generateId(), thumbnail: '', contentType: 'infographic', description: 'إنفوجرافيك عن تطور التكنولوجيا في فلسطين', visible: true },

@@ -22,6 +22,14 @@ export function ExportButtons() {
         return;
       }
 
+      // Create a temporary clone for PDF generation
+      const clone = element.cloneNode(true) as HTMLElement;
+      clone.style.width = '794px'; // A4 width at 96dpi
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.backgroundColor = '#ffffff';
+      document.body.appendChild(clone);
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -30,101 +38,72 @@ export function ExportButtons() {
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
+      const margin = 8;
       const usableWidth = pdfWidth - (margin * 2);
       const usableHeight = pdfHeight - (margin * 2);
 
-      // Get all sections that should not be split
-      const sections = element.querySelectorAll('header, section, footer, .grid, table, .mb-6, .mb-8, .mb-10');
-      const elementsToCapture: HTMLElement[] = [];
+      // Capture entire element as one canvas
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 794,
+        width: 794
+      });
+
+      // Remove clone
+      document.body.removeChild(clone);
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
       
-      // If no sections found, capture entire element
-      if (sections.length === 0) {
-        elementsToCapture.push(element as HTMLElement);
+      // Scale to fill page width properly
+      const scaledWidth = usableWidth;
+      const scaledHeight = (imgHeight * usableWidth) / imgWidth;
+
+      // If content fits on one page
+      if (scaledHeight <= usableHeight) {
+        pdf.addImage(imgData, 'PNG', margin, margin, scaledWidth, scaledHeight);
       } else {
-        // Get direct children and important elements
-        const children = element.children;
-        for (let i = 0; i < children.length; i++) {
-          elementsToCapture.push(children[i] as HTMLElement);
-        }
-      }
-
-      let currentY = margin;
-      let isFirstElement = true;
-
-      for (const el of elementsToCapture) {
-        // Capture each section separately
-        const canvas = await html2canvas(el as HTMLElement, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
+        // Split into multiple pages
+        const pageHeight = usableHeight;
+        const totalPages = Math.ceil(scaledHeight / pageHeight);
         
-        // Scale to fit width while maintaining aspect ratio
-        const scaledWidth = usableWidth;
-        const scaledHeight = (imgHeight * usableWidth) / imgWidth;
-
-        // Check if this element fits on current page
-        if (!isFirstElement && currentY + scaledHeight > pdfHeight - margin) {
-          // Add new page
-          pdf.addPage();
-          currentY = margin;
-        }
-
-        // If element is taller than page, we need to handle it specially
-        if (scaledHeight > usableHeight) {
-          // For very tall elements, capture and split carefully
-          let remainingHeight = scaledHeight;
-          let sourceY = 0;
-          
-          while (remainingHeight > 0) {
-            const heightToDraw = Math.min(remainingHeight, usableHeight);
-            const sourceHeight = (heightToDraw / scaledHeight) * imgHeight;
-            
-            // Create a temporary canvas for this portion
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = imgWidth;
-            tempCanvas.height = sourceHeight;
-            const ctx = tempCanvas.getContext('2d');
-            
-            if (ctx) {
-              ctx.drawImage(
-                canvas, 
-                0, sourceY, imgWidth, sourceHeight,
-                0, 0, imgWidth, sourceHeight
-              );
-              
-              const portionData = tempCanvas.toDataURL('image/png');
-              
-              if (currentY !== margin) {
-                pdf.addPage();
-                currentY = margin;
-              }
-              
-              pdf.addImage(portionData, 'PNG', margin, currentY, scaledWidth, heightToDraw);
-            }
-            
-            sourceY += sourceHeight;
-            remainingHeight -= heightToDraw;
-            
-            if (remainingHeight > 0) {
-              pdf.addPage();
-              currentY = margin;
-            }
+        for (let page = 0; page < totalPages; page++) {
+          if (page > 0) {
+            pdf.addPage();
           }
-          currentY = margin + (scaledHeight % usableHeight) || usableHeight;
-        } else {
-          // Element fits, add it
-          pdf.addImage(imgData, 'PNG', margin, currentY, scaledWidth, scaledHeight);
-          currentY += scaledHeight + 5; // Add small gap between elements
+          
+          // Calculate source region for this page
+          const sourceY = (page * pageHeight / scaledHeight) * imgHeight;
+          const sourceHeight = Math.min(
+            (pageHeight / scaledHeight) * imgHeight,
+            imgHeight - sourceY
+          );
+          
+          // Create temporary canvas for this page portion
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = imgWidth;
+          pageCanvas.height = sourceHeight;
+          const ctx = pageCanvas.getContext('2d');
+          
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+            ctx.drawImage(
+              canvas,
+              0, sourceY, imgWidth, sourceHeight,
+              0, 0, imgWidth, sourceHeight
+            );
+            
+            const pageImgData = pageCanvas.toDataURL('image/png');
+            const drawHeight = (sourceHeight / imgHeight) * scaledHeight;
+            
+            pdf.addImage(pageImgData, 'PNG', margin, margin, scaledWidth, drawHeight);
+          }
         }
-        
-        isFirstElement = false;
       }
 
       pdf.save('التقرير_الشهري.pdf');
