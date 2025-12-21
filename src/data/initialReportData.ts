@@ -23,6 +23,19 @@ export const initialReportData: ReportData = {
     },
     {
       id: generateId(),
+      type: 'content',
+      title: 'أفضل محتوى خلال الشهر',
+      icon: 'sparkles',
+      visible: true,
+      data: [
+        { id: generateId(), thumbnail: '', contentType: 'video', description: 'فيديو قصير عن التراث الفلسطيني حقق أكثر من مليون مشاهدة', visible: true },
+        { id: generateId(), thumbnail: '', contentType: 'infographic', description: 'إنفوجرافيك عن تطور التكنولوجيا في فلسطين', visible: true },
+        { id: generateId(), thumbnail: '', contentType: 'design', description: 'تصميم حملة #تراثنا_هويتنا', visible: true },
+        { id: generateId(), thumbnail: '', contentType: 'ai', description: 'محتوى بالذكاء الاصطناعي لتوضيح المعالم التاريخية', visible: true }
+      ]
+    },
+    {
+      id: generateId(),
       type: 'table',
       title: 'إجمالي عدد المتابعين',
       icon: 'table',
@@ -195,8 +208,20 @@ export const initialSettings: ReportSettings = {
   showKPIs: true,
   showPlatformCards: true,
   showNotes: true,
+  showContent: true,
   enableTableStriping: true,
   enableHoverEffects: true,
   primaryColor: '#00796b',
-  accentColor: '#d4af37'
+  accentColor: '#d4af37',
+  email: {
+    emails: [],
+    organizationName: 'منصة فلسطين صوف',
+    reportMonth: 'نوفمبر 2025'
+  },
+  theme: {
+    primaryColor: 'teal',
+    accentColor: 'gold',
+    cardStyle: 'modern',
+    fontFamily: 'both'
+  }
 };

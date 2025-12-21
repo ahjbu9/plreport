@@ -3,6 +3,7 @@ import { KPICardEditor, AddKPIButton } from './KPICardEditor';
 import { TableEditor } from './TableEditor';
 import { PlatformCardEditor } from './PlatformCardEditor';
 import { NoteSectionEditor } from './NoteSectionEditor';
+import { ContentCardEditor, AddContentCardButton } from './ContentCardEditor';
 import { EditableText } from './EditableText';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -12,7 +13,8 @@ import {
   KPICard, 
   ReportTable, 
   PlatformCard, 
-  NoteSection 
+  NoteSection,
+  ContentCard
 } from '@/types/report';
 import { 
   ChartLine, 
@@ -22,7 +24,8 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
-  Trash2
+  Trash2,
+  Sparkles
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -31,7 +34,8 @@ const sectionIcons: Record<string, React.ElementType> = {
   'table': Table,
   'layout-grid': LayoutGrid,
   'clipboard-list': ClipboardList,
-  'bar-chart': ChartLine
+  'bar-chart': ChartLine,
+  'sparkles': Sparkles
 };
 
 export function ReportEditor() {
@@ -59,7 +63,10 @@ export function ReportEditor() {
     removeSection,
     addKPI,
     removeKPI,
-    removePlatformCard
+    removePlatformCard,
+    updateContentCard,
+    addContentCard,
+    removeContentCard
   } = useReport();
 
   const followerData = useFollowerCalculation(reportData);
@@ -168,6 +175,30 @@ export function ReportEditor() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-3">
                       * يمكنك إضافة من 3 إلى 8 مؤشرات. إذا كان المؤشر يحتوي على "إجمالي المتابعين" في عنوانه، سيتم حسابه تلقائياً من جدول المنصات.
+                    </p>
+                  </>
+                )}
+
+                {section.type === 'content' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {(section.data as ContentCard[]).map((card) => (
+                        <ContentCardEditor
+                          key={card.id}
+                          card={card}
+                          onUpdate={(updates) => updateContentCard(section.id, card.id, updates)}
+                          onRemove={() => removeContentCard(section.id, card.id)}
+                        />
+                      ))}
+                      {(section.data as ContentCard[]).length < 8 && (
+                        <AddContentCardButton 
+                          onAdd={() => addContentCard(section.id)}
+                          disabled={(section.data as ContentCard[]).length >= 8}
+                        />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      * يمكنك إضافة حتى 8 بطاقات محتوى مميز. اضغط على الصورة لرفع ثمبنيل جديد.
                     </p>
                   </>
                 )}
