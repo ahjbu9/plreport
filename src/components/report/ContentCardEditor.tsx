@@ -51,20 +51,20 @@ export function ContentCardEditor({ card, onUpdate, onRemove }: ContentCardEdito
   };
 
   return (
-    <Card className="overflow-hidden border-border/50 shadow-soft transition-all hover:shadow-elevated">
-      {/* Thumbnail */}
+    <Card className="overflow-hidden border-border/50 shadow-soft transition-all hover:shadow-elevated flex flex-col">
+      {/* Thumbnail - Adaptive container */}
       <div 
-        className="relative aspect-video bg-muted cursor-pointer group"
+        className="relative bg-muted cursor-pointer group min-h-[120px] max-h-[200px] flex items-center justify-center overflow-hidden"
         onClick={() => fileInputRef.current?.click()}
       >
         {card.thumbnail ? (
           <img 
             src={card.thumbnail} 
             alt={card.description}
-            className="w-full h-full object-cover"
+            className="w-full h-auto max-h-[200px] object-contain"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
+          <div className="w-full h-[140px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Image className="w-10 h-10" />
             <span className="text-sm">اضغط لرفع صورة</span>
           </div>
@@ -81,7 +81,7 @@ export function ContentCardEditor({ card, onUpdate, onRemove }: ContentCardEdito
         />
         
         {/* Content Type Badge */}
-        <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${config.bgColor} ${config.color}`}>
+        <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-md ${config.bgColor} ${config.color}`}>
           <TypeIcon className="w-3.5 h-3.5" />
           {config.label}
         </div>
