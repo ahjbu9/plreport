@@ -28,9 +28,9 @@ export function ExportButtons() {
         position: fixed;
         left: -10000px;
         top: 0;
-        width: 210mm;
+        width: 794px;
         background: white;
-        padding: 15mm;
+        padding: 40px;
         box-sizing: border-box;
       `;
 
@@ -45,19 +45,48 @@ export function ExportButtons() {
         border-radius: 0;
       `;
 
-      // Fix images for PDF
-      const images = clone.querySelectorAll('img');
-      images.forEach(img => {
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-        img.style.objectFit = 'contain';
-      });
-
-      // Fix grid layouts
-      const grids = clone.querySelectorAll('.grid');
-      grids.forEach(grid => {
+      // Fix content cards grid - force 4 columns with equal sizing
+      const contentGrids = clone.querySelectorAll('.grid');
+      contentGrids.forEach(grid => {
         const el = grid as HTMLElement;
-        if (el.classList.contains('grid-cols-4') || el.classList.contains('md:grid-cols-4')) {
+        // Check if it's the content cards grid (4 columns)
+        if (el.classList.contains('grid-cols-2') && el.classList.contains('md:grid-cols-4')) {
+          el.style.display = 'grid';
+          el.style.gridTemplateColumns = 'repeat(4, 1fr)';
+          el.style.gap = '12px';
+          el.style.width = '100%';
+          
+          // Fix each card to be equal size
+          const cards = el.children;
+          Array.from(cards).forEach(card => {
+            const cardEl = card as HTMLElement;
+            cardEl.style.width = '100%';
+            cardEl.style.minHeight = '200px';
+            cardEl.style.display = 'flex';
+            cardEl.style.flexDirection = 'column';
+            cardEl.style.overflow = 'visible';
+            
+            // Fix image container
+            const imgContainer = cardEl.querySelector('.aspect-video, .aspect-square, [class*="aspect"]') as HTMLElement;
+            if (imgContainer) {
+              imgContainer.style.height = '120px';
+              imgContainer.style.minHeight = '120px';
+              imgContainer.style.maxHeight = '120px';
+              imgContainer.style.overflow = 'hidden';
+            }
+            
+            // Fix description text - ensure it doesn't get cut off
+            const descEl = cardEl.querySelector('p, .text-sm') as HTMLElement;
+            if (descEl) {
+              descEl.style.overflow = 'visible';
+              descEl.style.textOverflow = 'clip';
+              descEl.style.whiteSpace = 'normal';
+              descEl.style.wordBreak = 'break-word';
+              descEl.style.lineHeight = '1.4';
+              descEl.style.fontSize = '11px';
+            }
+          });
+        } else if (el.classList.contains('grid-cols-4') || el.classList.contains('md:grid-cols-4')) {
           el.style.display = 'grid';
           el.style.gridTemplateColumns = 'repeat(4, 1fr)';
           el.style.gap = '12px';
@@ -72,7 +101,25 @@ export function ExportButtons() {
         }
       });
 
-      // Style cards
+      // Fix images for PDF
+      const images = clone.querySelectorAll('img');
+      images.forEach(img => {
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.maxHeight = '120px';
+        img.style.objectFit = 'contain';
+      });
+
+      // Fix notes section to prevent text cutting at page breaks
+      const noteSections = clone.querySelectorAll('ul, li');
+      noteSections.forEach(note => {
+        const el = note as HTMLElement;
+        el.style.pageBreakInside = 'avoid';
+        el.style.breakInside = 'avoid';
+        el.style.marginBottom = '8px';
+      });
+
+      // Style cards to prevent page breaks
       const cards = clone.querySelectorAll('[class*="rounded"]');
       cards.forEach(card => {
         const el = card as HTMLElement;
@@ -91,8 +138,8 @@ export function ExportButtons() {
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: wrapper.offsetWidth,
-        width: wrapper.offsetWidth,
+        windowWidth: 794,
+        width: 794,
         height: wrapper.scrollHeight
       });
 
@@ -104,36 +151,37 @@ export function ExportButtons() {
         format: 'a4'
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = 297; // A4 height in mm
+      const margin = 10;
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = pdfHeight - (margin * 2);
       
       const imgData = canvas.toDataURL('image/png', 1.0);
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       
-      // Calculate scaling
-      const ratio = imgWidth / pdfWidth;
-      const scaledHeight = imgHeight / ratio;
+      // Calculate scaling to fit width
+      const scale = contentWidth / (imgWidth / 2); // divided by 2 because of scale: 2
+      const scaledHeight = (imgHeight / 2) * scale;
       
-      // Handle multi-page
-      const pageHeight = pdfHeight;
-      let position = 0;
+      // Handle multi-page with smart breaks
+      const pageHeightPx = contentHeight / scale * 2; // pixels per page
+      let currentY = 0;
       let pageNum = 0;
 
-      while (position < scaledHeight) {
+      while (currentY < imgHeight) {
         if (pageNum > 0) {
           pdf.addPage();
         }
 
-        // Calculate source rectangle
-        const sourceY = position * ratio;
-        const sourceH = Math.min(pageHeight * ratio, imgHeight - sourceY);
-        const destH = sourceH / ratio;
-
+        // Calculate how much to capture for this page
+        let captureHeight = Math.min(pageHeightPx, imgHeight - currentY);
+        
         // Create page canvas
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = imgWidth;
-        pageCanvas.height = sourceH;
+        pageCanvas.height = captureHeight;
         const ctx = pageCanvas.getContext('2d');
         
         if (ctx) {
@@ -141,15 +189,16 @@ export function ExportButtons() {
           ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
           ctx.drawImage(
             canvas,
-            0, sourceY, imgWidth, sourceH,
-            0, 0, imgWidth, sourceH
+            0, currentY, imgWidth, captureHeight,
+            0, 0, imgWidth, captureHeight
           );
           
           const pageData = pageCanvas.toDataURL('image/png', 1.0);
-          pdf.addImage(pageData, 'PNG', 0, 0, pdfWidth, destH);
+          const destHeight = (captureHeight / 2) * scale;
+          pdf.addImage(pageData, 'PNG', margin, margin, contentWidth, destHeight);
         }
 
-        position += pageHeight;
+        currentY += captureHeight;
         pageNum++;
       }
 
