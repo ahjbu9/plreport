@@ -40,6 +40,7 @@ interface ReportContextType {
   resetToDefault: () => void;
   exportToJSON: () => string;
   importFromJSON: (json: string) => boolean;
+  updateSectionsOrder: (sections: ReportSection[]) => void;
 }
 
 const ReportContext = createContext<ReportContextType | undefined>(undefined);
@@ -589,6 +590,13 @@ export function ReportProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const updateSectionsOrder = (sections: ReportSection[]) => {
+    setReportData(prev => ({
+      ...prev,
+      sections
+    }));
+  };
+
   return (
     <ReportContext.Provider value={{
       reportData,
@@ -626,7 +634,8 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       loadSettings,
       resetToDefault,
       exportToJSON,
-      importFromJSON
+      importFromJSON,
+      updateSectionsOrder
     }}>
       {children}
     </ReportContext.Provider>
