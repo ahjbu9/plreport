@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useReport } from '@/contexts/ReportContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -6,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SectionOrderEditor } from './SectionOrderEditor';
 import { 
   Settings2, 
   Eye, 
-  Type, 
   FileOutput,
   Plus,
   RotateCcw,
@@ -18,12 +19,15 @@ import {
   X,
   Sparkles,
   Save,
-  Send
+  Send,
+  BarChart3,
+  GripVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
 export function SettingsPage() {
+  const navigate = useNavigate();
   const { 
     reportData,
     settings, 
@@ -70,7 +74,7 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="display" dir="rtl" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted">
+        <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-muted">
           <TabsTrigger value="display" className="gap-2 py-3">
             <Eye className="w-4 h-4" />
             العرض
@@ -78,6 +82,10 @@ export function SettingsPage() {
           <TabsTrigger value="theme" className="gap-2 py-3">
             <Palette className="w-4 h-4" />
             المظهر
+          </TabsTrigger>
+          <TabsTrigger value="order" className="gap-2 py-3">
+            <GripVertical className="w-4 h-4" />
+            الترتيب
           </TabsTrigger>
           <TabsTrigger value="email" className="gap-2 py-3">
             <Mail className="w-4 h-4" />
@@ -222,6 +230,24 @@ export function SettingsPage() {
                 </Select>
               </div>
             </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="order">
+          <SectionOrderEditor />
+          
+          <Card className="p-6 shadow-soft mt-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              مقارنة التقارير
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              قارن بين التقارير الشهرية باستخدام الرسوم البيانية والجداول
+            </p>
+            <Button onClick={() => navigate('/compare')} className="gap-2 gradient-gold text-accent-foreground">
+              <BarChart3 className="w-4 h-4" />
+              الانتقال لصفحة المقارنة
+            </Button>
           </Card>
         </TabsContent>
 

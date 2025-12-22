@@ -31,10 +31,10 @@ export function useFollowerCalculation(reportData: ReportData) {
     
     const tables = tableSection.data as ReportTable[];
     
-    // Find a table with "متابعين" in the title or columns
+    // Find a table with followers data
     const followersTable = tables.find(table => {
       const hasFollowersColumn = table.columns.some(
-        col => col.header.includes('متابعين') || col.header.includes('المتابعين')
+        col => col.header.includes('متابعين') || col.header.includes('المتابعين') || col.header.includes('عدد المتابعين')
       );
       const hasPlatformColumn = table.columns.some(
         col => col.header.includes('المنصة') || col.header.includes('منصة')
@@ -46,7 +46,7 @@ export function useFollowerCalculation(reportData: ReportData) {
     
     // Find the followers column
     const followersColumn = followersTable.columns.find(
-      col => col.header.includes('متابعين') || col.header.includes('المتابعين')
+      col => col.header.includes('متابعين') || col.header.includes('المتابعين') || col.header.includes('عدد المتابعين')
     );
     
     if (!followersColumn) return null;
