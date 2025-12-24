@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useReport } from '@/contexts/ReportContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SectionOrderEditor } from './SectionOrderEditor';
+import { UserManagement } from './UserManagement';
+import { SavedReports } from './SavedReports';
 import { 
   Settings2, 
   Eye, 
@@ -21,13 +24,17 @@ import {
   Save,
   Send,
   BarChart3,
-  GripVertical
+  GripVertical,
+  Users,
+  FolderOpen,
+  LogOut
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const { user, isAdmin, signOut } = useAuth();
   const { 
     reportData,
     settings, 
@@ -73,8 +80,12 @@ export function SettingsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="display" dir="rtl" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-muted">
+      <Tabs defaultValue="reports" dir="rtl" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-8 h-auto p-1 bg-muted">
+          <TabsTrigger value="reports" className="gap-2 py-3">
+            <FolderOpen className="w-4 h-4" />
+            التقارير
+          </TabsTrigger>
           <TabsTrigger value="display" className="gap-2 py-3">
             <Eye className="w-4 h-4" />
             العرض
@@ -95,11 +106,19 @@ export function SettingsPage() {
             <FileOutput className="w-4 h-4" />
             الأقسام
           </TabsTrigger>
+          <TabsTrigger value="users" className="gap-2 py-3">
+            <Users className="w-4 h-4" />
+            المستخدمون
+          </TabsTrigger>
           <TabsTrigger value="advanced" className="gap-2 py-3">
             <Settings2 className="w-4 h-4" />
             متقدم
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="reports">
+          <SavedReports />
+        </TabsContent>
 
         <TabsContent value="display">
           <Card className="p-6 shadow-soft">
@@ -452,6 +471,33 @@ export function SettingsPage() {
               <RotateCcw className="w-4 h-4" />
               إعادة التعيين للوضع الافتراضي
             </Button>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserManagement />
+          
+          {/* Logout section */}
+          <Card className="p-6 shadow-soft mt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">تسجيل الخروج</h3>
+                <p className="text-sm text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  signOut();
+                  navigate('/auth');
+                }}
+                className="gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                تسجيل الخروج
+              </Button>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
