@@ -59,14 +59,34 @@ export interface ContentSection {
   visible: boolean;
 }
 
+// Employee Evaluation
+export interface EmployeeEvaluation {
+  id: string;
+  name: string;
+  role: string;
+  tasks: string;
+  completionRate: number;
+  notes: string;
+}
+
+export interface EmployeeEvaluationSection {
+  id: string;
+  title: string;
+  evaluations: EmployeeEvaluation[];
+  visible: boolean;
+}
+
 export interface ReportSection {
   id: string;
-  type: 'kpi' | 'table' | 'platforms' | 'notes' | 'content';
+  type: 'kpi' | 'table' | 'platforms' | 'notes' | 'content' | 'evaluation';
   title: string;
   icon: string;
   visible: boolean;
-  data: KPICard[] | ReportTable[] | PlatformCard[] | NoteSection[] | ContentCard[];
+  data: KPICard[] | ReportTable[] | PlatformCard[] | NoteSection[] | ContentCard[] | EmployeeEvaluation[];
 }
+
+// Report Types
+export type ReportType = 'monthly' | 'special';
 
 export interface ReportHeader {
   title: string;
@@ -82,6 +102,11 @@ export interface ReportData {
   header: ReportHeader;
   sections: ReportSection[];
   footer: ReportFooter;
+  reportType?: ReportType;
+  month?: string;
+  year?: string;
+  specialReportName?: string;
+  campaignName?: string;
 }
 
 export interface EmailSettings {
@@ -110,4 +135,18 @@ export interface ReportSettings {
   accentColor: string;
   email: EmailSettings;
   theme: ThemeSettings;
+}
+
+// Saved Report from database
+export interface SavedReport {
+  id: string;
+  title: string;
+  month: string;
+  year: string;
+  data: ReportData;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  report_type?: ReportType;
+  campaign_name?: string;
 }

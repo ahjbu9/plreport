@@ -4,6 +4,7 @@ import { TableEditor } from './TableEditor';
 import { PlatformCardEditor } from './PlatformCardEditor';
 import { NoteSectionEditor } from './NoteSectionEditor';
 import { ContentCardEditor, AddContentCardButton } from './ContentCardEditor';
+import { EmployeeEvaluationEditor } from './EmployeeEvaluationEditor';
 import { EditableText } from './EditableText';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +15,8 @@ import {
   ReportTable, 
   PlatformCard, 
   NoteSection,
-  ContentCard
+  ContentCard,
+  EmployeeEvaluation
 } from '@/types/report';
 import { 
   ChartLine, 
@@ -25,7 +27,8 @@ import {
   ChevronDown,
   ChevronUp,
   Trash2,
-  Sparkles
+  Sparkles,
+  Users
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -35,7 +38,8 @@ const sectionIcons: Record<string, React.ElementType> = {
   'layout-grid': LayoutGrid,
   'clipboard-list': ClipboardList,
   'bar-chart': ChartLine,
-  'sparkles': Sparkles
+  'sparkles': Sparkles,
+  'users': Users
 };
 
 export function ReportEditor() {
@@ -66,7 +70,8 @@ export function ReportEditor() {
     removePlatformCard,
     updateContentCard,
     addContentCard,
-    removeContentCard
+    removeContentCard,
+    updateEmployeeEvaluation
   } = useReport();
 
   const followerData = useFollowerCalculation(reportData);
@@ -273,6 +278,14 @@ export function ReportEditor() {
                       إضافة مجموعة ملاحظات
                     </Button>
                   </>
+                )}
+
+                {section.type === 'evaluation' && (
+                  <EmployeeEvaluationEditor
+                    sectionId={section.id}
+                    evaluations={section.data as EmployeeEvaluation[]}
+                    onUpdate={updateEmployeeEvaluation}
+                  />
                 )}
               </div>
             )}

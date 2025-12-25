@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ReportData, ReportSettings, ReportSection, ReportTable, KPICard, PlatformCard, NoteSection, TableColumn, ContentCard } from '@/types/report';
+import { ReportData, ReportSettings, ReportSection, ReportTable, KPICard, PlatformCard, NoteSection, TableColumn, ContentCard, EmployeeEvaluation } from '@/types/report';
 import { initialReportData, initialSettings } from '@/data/initialReportData';
 
 interface ReportContextType {
@@ -30,10 +30,10 @@ interface ReportContextType {
   addTable: (sectionId: string, title: string) => void;
   addPlatformCard: (sectionId: string) => void;
   addNoteGroup: (sectionId: string) => void;
-  // Content section functions
   updateContentCard: (sectionId: string, cardId: string, updates: Partial<ContentCard>) => void;
   addContentCard: (sectionId: string) => void;
   removeContentCard: (sectionId: string, cardId: string) => void;
+  updateEmployeeEvaluation: (sectionId: string, evaluations: EmployeeEvaluation[]) => void;
   saveToLocalStorage: () => void;
   loadReport: (data: ReportData) => void;
   loadSettings: (settings: ReportSettings) => void;
@@ -511,14 +511,23 @@ export function ReportProvider({ children }: { children: ReactNode }) {
     const newSection: ReportSection = {
       id: generateId(),
       type,
-      title: type === 'content' ? 'أفضل محتوى' : 'قسم جديد',
-      icon: type === 'kpi' ? 'bar-chart' : type === 'table' ? 'table' : type === 'platforms' ? 'layout-grid' : type === 'content' ? 'sparkles' : 'clipboard-list',
+      title: type === 'content' ? 'أفضل محتوى' : type === 'evaluation' ? 'تقييم الموظفين' : 'قسم جديد',
+      icon: type === 'kpi' ? 'bar-chart' : type === 'table' ? 'table' : type === 'platforms' ? 'layout-grid' : type === 'content' ? 'sparkles' : type === 'evaluation' ? 'users' : 'clipboard-list',
       visible: true,
       data: []
     };
     setReportData(prev => ({
       ...prev,
       sections: [...prev.sections, newSection]
+    }));
+  };
+
+  const updateEmployeeEvaluation = (sectionId: string, evaluations: EmployeeEvaluation[]) => {
+    setReportData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => 
+        s.id === sectionId && s.type === 'evaluation' ? { ...s, data: evaluations } : s
+      )
     }));
   };
 
@@ -623,6 +632,7 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       updateContentCard,
       addContentCard,
       removeContentCard,
+      updateEmployeeEvaluation,
       updateSettings,
       addSection,
       removeSection,
